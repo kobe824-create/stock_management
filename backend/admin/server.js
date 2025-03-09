@@ -102,7 +102,7 @@ app.post('/api/insert-new-sod-stock', async (req,res)=>{
 }
 catch(err){
   res.status(500).json({
-    message:'Error occured',
+    message:'Error occurred',
     error: err.message,
   });
 }
@@ -124,7 +124,7 @@ app.post('/api/insert-new-csa-stock', async (req,res) =>{
   }
   catch(err){
     res.status(500).json({
-      message:"Error occured",
+      message:"Error occurred",
       error: err.message,
     });
   }
@@ -146,7 +146,7 @@ app.get('/api/totalstock', async (req, res) =>{
   }
   catch(err){
        res.status(500).json({
-        message:"Error occured",
+        message:"Error occurred",
         error: err.message,
        });
   }
@@ -197,7 +197,7 @@ app.post('/api/insert-new-user', async (req,res) =>{
   }
   catch(err){
      res.status(500).json({
-      message:"Error occured while inserting user",
+      message:"Error occurred while inserting user",
       error: err.message,
      });
   }
@@ -214,7 +214,7 @@ app.get('/api/select-all-users', async(req,res) =>{
   }
   catch(err){
     res.status(500).json({
-      message:"Error occured",
+      message:"Error occurred",
       error: err.message,
     });
   }
@@ -231,7 +231,7 @@ app.get('/api/bdc-stock' , async(req ,res) =>{
   }
   catch(err){
      res.status(500).json({
-      message: "Error occured",
+      message: "Error occurred",
       error: err.message,
      });
   }
@@ -249,7 +249,7 @@ app.get('/api/sod-stock' , async(req ,res) =>{
 }
 catch(err){
    res.status(500).json({
-    message: "Error occured",
+    message: "Error occurred",
     error: err.message,
    });
 }
@@ -266,7 +266,7 @@ res.json({
   }
   catch(err){
    res.status(500).json({
-    message: "Error occured",
+    message: "Error occurred",
     error: err.message,
    });
   }
@@ -283,11 +283,77 @@ app.get('/api/pbw-stock' , async(req,res) =>{
   }
   catch(err){
     res.status(500).json({
-      message: "Error occured",
+      message: "Error occurred",
       error: err.message,
     });
   }
 });
+
+// New API endpoint to fetch stock data for the chart
+app.get('/api/stock-data', async (req, res) => {
+  try {
+    const [sodResult] = await db.execute(`SELECT toolname, availableinstock FROM sod_stock`);
+    const [bdcResult] = await db.execute(`SELECT toolname, availableinstock FROM bdc_stock`);
+    const [csaResult] = await db.execute(`SELECT toolname, availableinstock FROM csa_stock`);
+    const [pbwResult] = await db.execute(`SELECT toolname, availableinstock FROM pbw_stock`);
+
+    const labels = [];
+    const data = [];
+
+    const allResults = [...sodResult, ...bdcResult, ...csaResult, ...pbwResult];
+
+    allResults.forEach(item => {
+      labels.push(item.toolname);
+      data.push(item.availableinstock);
+    });
+
+    res.json({
+      message: "Stock data retrieved successfully",
+      labels,
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+app.get('/api/stock-comparison', async (req, res) => {
+  try {
+    const [sodResult] = await db.execute(`SELECT SUM(availableinstock) as total FROM sod_stock`);
+    const [bdcResult] = await db.execute(`SELECT SUM(availableinstock) as total FROM bdc_stock`);
+    const [csaResult] = await db.execute(`SELECT SUM(availableinstock) as total FROM csa_stock`);
+    const [pbwResult] = await db.execute(`SELECT SUM(availableinstock) as total FROM pbw_stock`);
+
+    const data = {
+      labels: ['SOD', 'BDC', 'CSA', 'PBW'],
+      datasets: [
+        {
+          label: 'Stock Comparison',
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'],
+          data: [
+            sodResult[0].total,
+            bdcResult[0].total,
+            csaResult[0].total,
+            pbwResult[0].total
+          ]
+        }
+      ]
+    };
+
+    res.json({
+      message: "Stock comparison data retrieved successfully",
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
 
 app.delete('/api/delete-bdc-stock', async (req, res) => {
   const { toolname } = req.body;
@@ -349,6 +415,30 @@ app.delete('/api/delete-csa-stock', async (req, res) => {
       message: "Tool deleted successfully",
       result,
     });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+app.post('/api/adminlogin', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+  try {
+    const query = "SELECT * FROM admin WHERE adminemail = ? AND adminpassword = ?";
+    const [result] = await db.execute(query, [email, password]);
+    if (result.length > 0) {
+      res.json({
+        message: "Admin found successfully",
+        result,
+      });
+    } else {
+      res.status(401).json({ message: "Invalid email or password" });
+    }
   } catch (err) {
     res.status(500).json({
       message: "Error occurred",
