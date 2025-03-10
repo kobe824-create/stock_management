@@ -359,18 +359,118 @@
       const usageData = ref([]);
       const requestsData = ref([]);
       const departments = ref([]);
+      const deptData = ref({});
       const selectedDept = ref(null);
       const currentPage = ref(1);
       const totalPages = ref(1);
   
       const reportTypes = ['inventory', 'usage', 'requests', 'department'];
   
-      const fetchSummaryData = async () => {
+      const fetchTotalItems = async () => {
         try {
-          const response = await axios.get('http://localhost:3000/api/summary');
-          summaryData.value = response.data;
+          const response = await axios.get('http://localhost:3000/api/total-items');
+          summaryData.value.totalItems = response.data.totalItems;
         } catch (error) {
-          console.error('Error fetching summary data:', error);
+          console.error('Error fetching total items:', error);
+        }
+      };
+  
+      const fetchTotalUsage = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/api/total-usage');
+          summaryData.value.totalUsage = response.data.totalUsage;
+        } catch (error) {
+          console.error('Error fetching total usage:', error);
+        }
+      };
+  
+      const fetchLowStockItems = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/api/low-stock-items');
+          summaryData.value.lowStockItems = response.data.lowStockItems;
+        } catch (error) {
+          console.error('Error fetching low stock items:', error);
+        }
+      };
+  
+      const fetchOutOfStockItems = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/api/out-of-stock-items');
+          summaryData.value.outOfStockItems = response.data.outOfStockItems;
+        } catch (error) {
+          console.error('Error fetching out of stock items:', error);
+        }
+      };
+  
+      const fetchStockValue = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/api/stock-value');
+          summaryData.value.stockValue = response.data.stockValue;
+        } catch (error) {
+          console.error('Error fetching stock value:', error);
+        }
+      };
+  
+      const fetchAvgDailyUsage = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/api/avg-daily-usage');
+          summaryData.value.avgDailyUsage = response.data.avgDailyUsage;
+        } catch (error) {
+          console.error('Error fetching average daily usage:', error);
+        }
+      };
+  
+      const fetchMostUsedDept = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/api/most-used-dept');
+          summaryData.value.mostUsedDept = response.data.mostUsedDept;
+        } catch (error) {
+          console.error('Error fetching most used department:', error);
+        }
+      };
+  
+      const fetchFastestMoving = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/api/fastest-moving');
+          summaryData.value.fastestMoving = response.data.fastestMoving;
+        } catch (error) {
+          console.error('Error fetching fastest moving items:', error);
+        }
+      };
+  
+      const fetchTotalRequests = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/api/total-requests');
+          summaryData.value.totalRequests = response.data.totalRequests;
+        } catch (error) {
+          console.error('Error fetching total requests:', error);
+        }
+      };
+  
+      const fetchApprovedRequests = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/api/approved-requests');
+          summaryData.value.approvedRequests = response.data.approvedRequests;
+        } catch (error) {
+          console.error('Error fetching approved requests:', error);
+        }
+      };
+  
+      const fetchPendingRequests = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/api/pending-requests');
+          summaryData.value.pendingRequests = response.data.pendingRequests;
+        } catch (error) {
+          console.error('Error fetching pending requests:', error);
+        }
+      };
+  
+      const fetchRejectedRequests = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/api/rejected-requests');
+          summaryData.value.rejectedRequests = response.data.rejectedRequests;
+        } catch (error) {
+          console.error('Error fetching rejected requests:', error);
         }
       };
   
@@ -405,9 +505,18 @@
       const fetchDepartments = async () => {
         try {
           const response = await axios.get('http://localhost:3000/api/departments');
-          departments.value = response.data;
+          departments.value = response.data.departments;
         } catch (error) {
           console.error('Error fetching departments:', error);
+        }
+      };
+  
+      const fetchDepartmentData = async (deptId) => {
+        try {
+          const response = await axios.get(`http://localhost:3000/api/department/${deptId}`);
+          deptData.value = response.data.departmentData || {};
+        } catch (error) {
+          console.error('Error fetching department data:', error);
         }
       };
   
@@ -426,7 +535,7 @@
   
       const selectDepartment = (deptId) => {
         selectedDept.value = deptId;
-        // Fetch department-specific data here
+        fetchDepartmentData(deptId);
       };
   
       const prevPage = () => {
@@ -455,7 +564,18 @@
       };
   
       onMounted(() => {
-        fetchSummaryData();
+        fetchTotalItems();
+        fetchTotalUsage();
+        fetchLowStockItems();
+        fetchOutOfStockItems();
+        fetchStockValue();
+        fetchAvgDailyUsage();
+        fetchMostUsedDept();
+        fetchFastestMoving();
+        fetchTotalRequests();
+        fetchApprovedRequests();
+        fetchPendingRequests();
+        fetchRejectedRequests();
         fetchInventoryData();
       });
   
@@ -466,6 +586,7 @@
         usageData,
         requestsData,
         departments,
+        deptData,
         selectedDept,
         currentPage,
         totalPages,

@@ -149,6 +149,182 @@ app.get('/api/totalstock', async (req, res) => {
   }
 });
 
+// API to fetch low stock items
+app.get('/api/low-stock-items', async (req, res) => {
+  try {
+    const query = `SELECT COUNT(*) AS lowStockItems FROM items WHERE stock < 10`; // Adjust the threshold as needed
+    const [result] = await db.execute(query);
+    res.json({
+      lowStockItems: result[0].lowStockItems,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch out of stock items
+app.get('/api/out-of-stock-items', async (req, res) => {
+  try {
+    const query = `SELECT COUNT(*) AS outOfStockItems FROM items WHERE stock = 0`;
+    const [result] = await db.execute(query);
+    res.json({
+      outOfStockItems: result[0].outOfStockItems,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch stock value
+app.get('/api/stock-value', async (req, res) => {
+  try {
+    const query = `SELECT SUM(stock * price) AS stockValue FROM items`;
+    const [result] = await db.execute(query);
+    res.json({
+      stockValue: result[0].stockValue,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch average daily usage
+app.get('/api/avg-daily-usage', async (req, res) => {
+  try {
+    const query = `SELECT AVG(daily_usage) AS avgDailyUsage FROM usage`;
+    const [result] = await db.execute(query);
+    res.json({
+      avgDailyUsage: result[0].avgDailyUsage,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch most used department
+app.get('/api/most-used-dept', async (req, res) => {
+  try {
+    const query = `SELECT department, SUM(usage_count) AS total FROM usage GROUP BY department ORDER BY total DESC LIMIT 1`;
+    const [result] = await db.execute(query);
+    res.json({
+      mostUsedDept: result[0].department,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch fastest moving item
+app.get('/api/fastest-moving', async (req, res) => {
+  try {
+    const query = `SELECT item_name FROM usage ORDER BY usage_count DESC LIMIT 1`;
+    const [result] = await db.execute(query);
+    res.json({
+      fastestMoving: result[0].item_name,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch total requests
+app.get('/api/total-requests', async (req, res) => {
+  try {
+    const query = `SELECT COUNT(*) AS totalRequests FROM requests`;
+    const [result] = await db.execute(query);
+    res.json({
+      totalRequests: result[0].totalRequests,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch approved requests
+app.get('/api/approved-requests', async (req, res) => {
+  try {
+    const query = `SELECT COUNT(*) AS approvedRequests FROM requests WHERE status = 'Approved'`;
+    const [result] = await db.execute(query);
+    res.json({
+      approvedRequests: result[0].approvedRequests,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch pending requests
+app.get('/api/pending-requests', async (req, res) => {
+  try {
+    const query = `SELECT COUNT(*) AS pendingRequests FROM requests WHERE status = 'Pending'`;
+    const [result] = await db.execute(query);
+    res.json({
+      pendingRequests: result[0].pendingRequests,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch rejected requests
+app.get('/api/rejected-requests', async (req, res) => {
+  try {
+    const query = `SELECT COUNT(*) AS rejectedRequests FROM requests WHERE status = 'Rejected'`;
+    const [result] = await db.execute(query);
+    res.json({
+      rejectedRequests: result[0].rejectedRequests,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch total items
+app.get('/api/total-items', async (req, res) => {
+  try {
+    const query = `SELECT COUNT(*) AS totalItems FROM items`;
+    const [result] = await db.execute(query);
+    res.json({
+      totalItems: result[0].totalItems,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
 // API to track low stock items
 app.get('/api/lowstock', async (req, res) => {
   const threshold = 5; // Define your low stock threshold here
@@ -338,6 +514,70 @@ app.get('/api/stock-comparison', async (req, res) => {
       message: "Stock comparison data retrieved successfully",
       data,
     });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch summary data
+app.get('/api/summary', async (req, res) => {
+  try {
+    const summaryData = {
+      totalItems: 0,
+      totalUsage: 0,
+      lowStockItems: 0,
+      outOfStockItems: 0,
+      stockValue: 0,
+      avgDailyUsage: 0,
+      mostUsedDept: '',
+      fastestMoving: '',
+      totalRequests: 0,
+      approvedRequests: 0,
+      pendingRequests: 0,
+      rejectedRequests: 0
+    };
+
+    // Fetch data for each summary field
+    const [totalItemsResult] = await db.execute(`SELECT COUNT(*) as count FROM items`);
+    summaryData.totalItems = totalItemsResult[0].count;
+
+    const [totalUsageResult] = await db.execute(`SELECT SUM(usage_count) as total FROM usage`);
+    summaryData.totalUsage = totalUsageResult[0].total;
+
+    const [lowStockItemsResult] = await db.execute(`SELECT COUNT(*) as count FROM items WHERE stock < 5`);
+    summaryData.lowStockItems = lowStockItemsResult[0].count;
+
+    const [outOfStockItemsResult] = await db.execute(`SELECT COUNT(*) as count FROM items WHERE stock = 0`);
+    summaryData.outOfStockItems = outOfStockItemsResult[0].count;
+
+    const [stockValueResult] = await db.execute(`SELECT SUM(stock * price) as total FROM items`);
+    summaryData.stockValue = stockValueResult[0].total;
+
+    const [avgDailyUsageResult] = await db.execute(`SELECT AVG(daily_usage) as avg FROM usage`);
+    summaryData.avgDailyUsage = avgDailyUsageResult[0].avg;
+
+    const [mostUsedDeptResult] = await db.execute(`SELECT department, SUM(usage_count) as total FROM usage GROUP BY department ORDER BY total DESC LIMIT 1`);
+    summaryData.mostUsedDept = mostUsedDeptResult[0].department;
+
+    const [fastestMovingResult] = await db.execute(`SELECT item_name FROM usage ORDER BY usage_count DESC LIMIT 1`);
+    summaryData.fastestMoving = fastestMovingResult[0].item_name;
+
+    const [totalRequestsResult] = await db.execute(`SELECT COUNT(*) as count FROM requests`);
+    summaryData.totalRequests = totalRequestsResult[0].count;
+
+    const [approvedRequestsResult] = await db.execute(`SELECT COUNT(*) as count FROM requests WHERE status = 'Approved'`);
+    summaryData.approvedRequests = approvedRequestsResult[0].count;
+
+    const [pendingRequestsResult] = await db.execute(`SELECT COUNT(*) as count FROM requests WHERE status = 'Pending'`);
+    summaryData.pendingRequests = pendingRequestsResult[0].count;
+
+    const [rejectedRequestsResult] = await db.execute(`SELECT COUNT(*) as count FROM requests WHERE status = 'Rejected'`);
+    summaryData.rejectedRequests = rejectedRequestsResult[0].count;
+
+    res.json(summaryData);
   } catch (err) {
     res.status(500).json({
       message: "Error occurred",
