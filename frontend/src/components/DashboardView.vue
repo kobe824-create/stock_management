@@ -1,69 +1,111 @@
+<!-- filepath: c:\Users\Lee\Desktop\stock_management\stock_management\frontend\src\components\DashboardView.vue -->
 <template>
-  <div class="dashboard">
-    <div class="main-content">
-      <div class="header">
-        <h2>Stocks Activity</h2>
+  <div class="dashboard-container">
+    <div class="dashboard-content">
+      <div class="dashboard-header">
+        <h1>Dashboard Overview</h1>
+        <div class="date-picker">
+          <span><font-awesome-icon :icon="['far', 'calendar-alt']" /> Last 30 days</span>
+        </div>
       </div>
 
-      <div v-if="loading" class="loading-container">
-        <div class="spinner"></div>
-      </div>
-
-      <div v-else>
-        <div class="cards">
-          <DashboardCard 
-            class="dash total-stock" 
-            :count="totalStock" 
-            title="Total Stock" 
-            color="bg-blue-500" 
-            apiEndpoint="totalstock" 
-          />
-          <DashboardCard 
-            class="dash low-stock" 
-            :count="lowStockCount" 
-            title="Low-Stock Alerts" 
-            color="bg-red-500" 
-            apiEndpoint="lowstock" 
-          />
-          <DashboardCard 
-            class="dash pending-requests" 
-            :count="pendingRequests" 
-            title="Pending Requests" 
-            color="bg-yellow-500" 
-            apiEndpoint="pendingrequests" 
-          />
-          <DashboardCard 
-            class="dash approved-requests" 
-            :count="approvedRequests" 
-            title="Approved Requests" 
-            color="bg-green-500" 
-            apiEndpoint="approvedrequests" 
-          />
+      <div class="stats-cards-container">
+        <div class="stats-card total-stock">
+          <div class="card-icon">
+            <font-awesome-icon :icon="['fas', 'boxes-stacked']" />
+          </div>
+          <div class="card-content">
+            <h3>Total Stock</h3>
+            <div class="stat-value">{{ totalStock }}</div>
+            <div class="stat-change positive">
+              <font-awesome-icon :icon="['fas', 'arrow-up']" /> 12% from last month
+            </div>
+          </div>
         </div>
 
-        <div class="details">
-          <div class="stocklife">
-            <h3>Stock Life</h3>
-            <div v-if="chartLoading" class="loading">
-              <div class="spinner"></div>
-            </div>
-            <StockChart v-else />
+        <div class="stats-card low-stock">
+          <div class="card-icon warning">
+            <font-awesome-icon :icon="['fas', 'exclamation-triangle']" />
           </div>
+          <div class="card-content">
+            <h3>Low Stock Items</h3>
+            <div class="stat-value">{{ lowStockCount }}</div>
+            <div class="stat-change negative">
+              <font-awesome-icon :icon="['fas', 'arrow-up']" /> 5% from last month
+            </div>
+          </div>
+        </div>
 
-          <div class="top-selling">
-            <h3>Top Requests Items</h3>
-            <div v-if="topRequestsLoading" class="loading">
-              <div class="spinner"></div>
+        <div class="stats-card pending-requests">
+          <div class="card-icon info">
+            <font-awesome-icon :icon="['fas', 'clock']" />
+          </div>
+          <div class="card-content">
+            <h3>Pending Requests</h3>
+            <div class="stat-value">{{ pendingRequests }}</div>
+            <div class="stat-change neutral">
+              <font-awesome-icon :icon="['fas', 'minus']" /> No change
             </div>
-            <div v-else-if="topRequestItems.length > 0" class="items-list">
-              <div v-for="(item, index) in topRequestItems" :key="index" class="item">
+          </div>
+        </div>
+
+        <div class="stats-card approved-requests">
+          <div class="card-icon success">
+            <font-awesome-icon :icon="['fas', 'check-circle']" />
+          </div>
+          <div class="card-content">
+            <h3>Approved Requests</h3>
+            <div class="stat-value">{{ approvedRequests }}</div>
+            <div class="stat-change positive">
+              <font-awesome-icon :icon="['fas', 'arrow-up']" /> 8% from last month
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-widgets">
+        <div class="widget stock-chart">
+          <div class="widget-header">
+            <h2>Stock Trends</h2>
+            <div class="widget-actions">
+              <button class="btn-icon">
+                <font-awesome-icon :icon="['fas', 'ellipsis-vertical']" />
+              </button>
+            </div>
+          </div>
+          <div v-if="chartLoading" class="loading-spinner">
+            <div class="spinner"></div>
+          </div>
+          <StockChart v-else />
+        </div>
+
+        <div class="widget top-items">
+          <div class="widget-header">
+            <h2>Top Requested Items</h2>
+            <div class="widget-actions">
+              <button class="btn-icon">
+                <font-awesome-icon :icon="['fas', 'ellipsis-vertical']" />
+              </button>
+            </div>
+          </div>
+          <div v-if="topRequestsLoading" class="loading-spinner">
+            <div class="spinner"></div>
+          </div>
+          <div v-else-if="topRequestItems.length > 0" class="top-items-list">
+            <div v-for="(item, index) in topRequestItems" :key="index" class="top-item">
+              <div class="item-rank">{{ index + 1 }}</div>
+              <div class="item-details">
                 <div class="item-name">{{ item.name }}</div>
-                <div class="item-count">{{ item.requestCount }}</div>
+                <div class="item-progress">
+                  <div class="progress-bar" :style="{ width: `${(item.requestCount / maxRequestCount) * 100}%` }"></div>
+                </div>
               </div>
+              <div class="item-count">{{ item.requestCount }}</div>
             </div>
-            <div v-else class="no-items">
-              No request data available
-            </div>
+          </div>
+          <div v-else class="no-data">
+            <font-awesome-icon :icon="['far', 'clipboard']" />
+            <p>No request data available</p>
           </div>
         </div>
       </div>
@@ -72,14 +114,12 @@
 </template>
 
 <script>
-import DashboardCard from "../components/DashboardCard.vue";
 import StockChart from "../components/StockChart.vue";
 import axios from 'axios';
 
 export default {
   name: "DashboardView",
   components: {
-    DashboardCard,
     StockChart,
   },
   data() {
@@ -94,6 +134,12 @@ export default {
       topRequestsLoading: true,
       error: null
     };
+  },
+  computed: {
+    maxRequestCount() {
+      if (this.topRequestItems.length === 0) return 0;
+      return Math.max(...this.topRequestItems.map(item => item.requestCount));
+    }
   },
   mounted() {
     this.fetchDashboardData();
@@ -182,8 +228,7 @@ export default {
         this.topRequestsLoading = false;
       }
       
-      // Simulate chart loading completion - remove this when your StockChart component
-      // has its own loading state management
+      // Simulate chart loading completion
       setTimeout(() => {
         this.chartLoading = false;
       }, 1000);
@@ -193,85 +238,187 @@ export default {
 </script>
 
 <style scoped>
-.dashboard {
-  display: flex;
-  float: right;
-  margin-left: 280px;
-}
-
-.main-content {
-  flex: 1;
-  padding: 20px;
-  background-color: #f8f9fb;
+.dashboard-container {
+  padding: 0;
+  background-color: #f8fafc;
   min-height: 100vh;
+  margin-left: 250px;
 }
 
-.header h2 {
-  font-size: 24px;
-  margin-bottom: 20px;
-  color: #333;
-  font-weight: 600;
+.dashboard-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  
 }
 
-.cards {
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.date-picker {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.date-picker:hover {
+  border-color: #cbd5e1;
+}
+
+.stats-cards-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-.dash {
-  background: white;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
+.stats-card {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.dash:hover {
+.stats-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-.details {
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background-color: #3b82f6;
+  color: white;
   display: flex;
-  gap: 20px;
-  margin-top: 30px;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  margin-right: 1rem;
 }
 
-.stocklife, .top-selling {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.card-icon.warning {
+  background-color: #f59e0b;
+}
+
+.card-icon.info {
+  background-color: #0ea5e9;
+}
+
+.card-icon.success {
+  background-color: #10b981;
+}
+
+.card-content {
   flex: 1;
 }
 
-.stocklife h3, .top-selling h3 {
-  font-size: 18px;
-  margin-bottom: 15px;
-  color: #333;
+.card-content h3 {
+  font-size: 0.875rem;
   font-weight: 500;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
+  color: #64748b;
+  margin: 0 0 0.5rem 0;
 }
 
-.low-stock {
-  color: #dc3545;
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
 }
 
-.loading-container {
+.stat-change {
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-change.positive {
+  color: #10b981;
+}
+
+.stat-change.negative {
+  color: #ef4444;
+}
+
+.stat-change.neutral {
+  color: #94a3b8;
+}
+
+.dashboard-widgets {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.widget {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.widget-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-icon:hover {
+  background-color: #f1f5f9;
+}
+
+.loading-spinner {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 200px;
-}
-
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 150px;
+  height: 300px;
 }
 
 .spinner {
@@ -279,7 +426,7 @@ export default {
   height: 40px;
   border: 4px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  border-top-color: #3498db;
+  border-top-color: #3b82f6;
   animation: spin 1s ease-in-out infinite;
 }
 
@@ -287,66 +434,69 @@ export default {
   to { transform: rotate(360deg); }
 }
 
-.items-list {
-  margin-top: 10px;
-}
-
-.item {
+.top-items-list {
   display: flex;
-  justify-content: space-between;
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  transition: background-color 0.2s;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.item:hover {
-  background-color: #f9f9f9;
+.top-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0;
 }
 
-.item:last-child {
-  border-bottom: none;
+.item-rank {
+  width: 24px;
+  height: 24px;
+  background-color: #f1f5f9;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-right: 0.75rem;
+}
+
+.item-details {
+  flex: 1;
 }
 
 .item-name {
+  font-size: 0.875rem;
   font-weight: 500;
+  color: #334155;
+  margin-bottom: 0.5rem;
+}
+
+.item-progress {
+  height: 4px;
+  background-color: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #3b82f6;
 }
 
 .item-count {
-  background-color: #e9ecef;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
 }
 
-.no-items {
-  color: #999;
-  text-align: center;
-  padding: 30px 0;
-  font-style: italic;
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #94a3b8;
+  font-size: 0.075rem;
+  margin-left: -50px;
 }
-
-/* Responsive styles */
-@media (max-width: 1200px) {
-  .cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard {
-    margin-left: 0;
-  }
-  
-  .cards {
-    grid-template-columns: 1fr;
-  }
-  
-  .details {
-    flex-direction: column;
-  }
-  
-  .main-content {
-    padding: 15px;
-  }
-}
-</style>x
+</style>

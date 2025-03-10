@@ -5,8 +5,8 @@ import cors from 'cors';
 const app = express();
 const port = 3000;
 
-app.use(cors()); 
-app.use(express.json()); 
+app.use(cors());
+app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send({
@@ -28,11 +28,11 @@ const connectDB = async () => {
     return db;
   } catch (err) {
     console.error('Database connection error:', err.message);
-    process.exit(1); 
+    process.exit(1);
   }
 };
 
-let db; 
+let db;
 
 connectDB().then((connection) => {
   db = connection;
@@ -86,69 +86,66 @@ app.post('/api/insert-new-pbw-stock', async (req, res) => {
   }
 });
 
-app.post('/api/insert-new-sod-stock', async (req,res)=>{
-  const { toolname , availabletools } = req.body;
-  if( !toolname || !availabletools){
-    return res.status(400).json({message:"All fields must be filled"});
+app.post('/api/insert-new-sod-stock', async (req, res) => {
+  const { toolname, availabletools } = req.body;
+  if (!toolname || !availabletools) {
+    return res.status(400).json({ message: "All fields must be filled" });
   }
-  try{
-  const query = `INSERT INTO  sod_stock (toolname , availableinstock) VALUES (?, ?)`;
-  const [result] = await db.execute(query, [toolname , availabletools]);
+  try {
+    const query = `INSERT INTO sod_stock (toolname, availableinstock) VALUES (?, ?)`;
+    const [result] = await db.execute(query, [toolname, availabletools]);
 
-  res.json({
-    message:'Tool inserted successfully',
-    result,
-  });
-}
-catch(err){
-  res.status(500).json({
-    message:'Error occurred',
-    error: err.message,
-  });
-}
-});
-
-app.post('/api/insert-new-csa-stock', async (req,res) =>{
-  const {toolname , availabletools} = req.body ;
-  if( !toolname || !availabletools){
-    return res.status(401).json({message:"All field must be filled"});
-  }
-  try{
-   const query = `INSERT INTO csa_stock (toolname, availableinstock) VALUES (?, ?)`;
-   const [result] = await db.execute(query,[toolname, availabletools]);
-
-   res.json({
-    message:"Tool inserted successfully",
-    result,
-   });
-  }
-  catch(err){
+    res.json({
+      message: 'Tool inserted successfully',
+      result,
+    });
+  } catch (err) {
     res.status(500).json({
-      message:"Error occurred",
+      message: 'Error occurred',
       error: err.message,
     });
   }
 });
 
-app.get('/api/totalstock', async (req, res) =>{
-  try{
-     const [sodResult] = await db.execute(`SELECT COUNT(*) as count FROM sod_stock`);
-     const [bdcResult] = await db.execute(`SELECT COUNT(*) as count FROM bdc_stock`);
-     const [csaResult] = await db.execute(`SELECT COUNT(*) as count FROM csa_stock`);
-     const [pbwResult] = await db.execute(`SELECT COUNT(*) as count FROM pbw_stock`);
-
-     const total = sodResult[0].count + bdcResult[0].count + csaResult[0].count + pbwResult[0].count;
-
-     res.json({
-      message:"All Tools in Stock are Selected successfully",
-      total,
-     });
+app.post('/api/insert-new-csa-stock', async (req, res) => {
+  const { toolname, availabletools } = req.body;
+  if (!toolname || !availabletools) {
+    return res.status(401).json({ message: "All field must be filled" });
   }
-  catch(err){
-       res.status(500).json({
-        message:"Error occurred",
-        error: err.message,
-       });
+  try {
+    const query = `INSERT INTO csa_stock (toolname, availableinstock) VALUES (?, ?)`;
+    const [result] = await db.execute(query, [toolname, availabletools]);
+
+    res.json({
+      message: "Tool inserted successfully",
+      result,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+app.get('/api/totalstock', async (req, res) => {
+  try {
+    const [sodResult] = await db.execute(`SELECT COUNT(*) as count FROM sod_stock`);
+    const [bdcResult] = await db.execute(`SELECT COUNT(*) as count FROM bdc_stock`);
+    const [csaResult] = await db.execute(`SELECT COUNT(*) as count FROM csa_stock`);
+    const [pbwResult] = await db.execute(`SELECT COUNT(*) as count FROM pbw_stock`);
+
+    const total = sodResult[0].count + bdcResult[0].count + csaResult[0].count + pbwResult[0].count;
+
+    res.json({
+      message: "All Tools in Stock are Selected successfully",
+      total,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
   }
 });
 
@@ -180,108 +177,102 @@ app.get('/api/lowstock', async (req, res) => {
   }
 });
 
-app.post('/api/insert-new-user', async (req,res) =>{
-  const {teachernames, teachertrade , teacheremail , teacherpassword} = req.body;
-  
-  if(!teachernames || !teachertrade || !teacheremail || !teacherpassword){
-    return res.status(400).json({message:"All fields must be filled"});
+app.post('/api/insert-new-user', async (req, res) => {
+  const { teachernames, teachertrade, teacheremail, teacherpassword , userrole , welcomeemail } = req.body;
+
+  if (!teachernames || !teachertrade || !teacheremail || !teacherpassword || !userrole || !welcomeemail) {
+    return res.status(400).json({ message: "All fields must be filled" });
   }
 
-  try{
-      const query = `INSERT INTO users (teacher_names , teacher_trade , teacher_email , teacher_password) VALUES (?,?,?,?)`;
-      const [result] = await db.execute(query,[teachernames, teachertrade ,teacheremail ,teacherpassword]);
-      res.json({
-        message:"User inserted successfully",
-        result,
-      });
-  }
-  catch(err){
-     res.status(500).json({
-      message:"Error occurred while inserting user",
+  try {
+    const query = `INSERT INTO users (teacher_names, teacher_trade, teacher_email, teacher_password , userrole , welcomeemail) VALUES (?,?,?,?,?)`;
+    const [result] = await db.execute(query, [teachernames, teachertrade, teacheremail, teacherpassword , userrole , welcomeemail ]);
+    res.json({
+      message: "User inserted successfully",
+      result,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred while inserting user",
       error: err.message,
-     });
+    });
   }
 });
 
-app.get('/api/select-all-users', async(req,res) =>{
-  try{
-    const query =`SELECT * FROM users`;
+app.get('/api/select-all-users', async (req, res) => {
+  try {
+    const query = `SELECT * FROM users`;
     const [result] = await db.execute(query);
     res.json({
       message: "All users selected successfully",
       result,
     });
-  }
-  catch(err){
+  } catch (err) {
     res.status(500).json({
-      message:"Error occurred",
+      message: "Error occurred",
       error: err.message,
     });
   }
 });
 
-app.get('/api/bdc-stock' , async(req ,res) =>{
-  try{
+app.get('/api/bdc-stock', async (req, res) => {
+  try {
     const query = ` SELECT * FROM bdc_stock `;
     const [result] = await db.execute(query);
     res.json({
       message: " All Tools in BDC stock selected successfully",
       result,
     });
-  }
-  catch(err){
-     res.status(500).json({
+  } catch (err) {
+    res.status(500).json({
       message: "Error occurred",
       error: err.message,
-     });
+    });
   }
 });
 
-app.get('/api/sod-stock' , async(req ,res) =>{
-  try{
- const query = `SELECT * FROM sod_stock`;
- const [result] = await db.execute(query);
- res.json({
-  message : " All Tools in SOD stock selected successfully",
-  result,
- });
+app.get('/api/sod-stock', async (req, res) => {
+  try {
+    const query = `SELECT * FROM sod_stock`;
+    const [result] = await db.execute(query);
+    res.json({
+      message: " All Tools in SOD stock selected successfully",
+      result,
+    });
 
-}
-catch(err){
-   res.status(500).json({
-    message: "Error occurred",
-    error: err.message,
-   });
-}
-});
-
-app.get('/api/csa-stock' , async(req ,res) => {
-  try{
-const query = `SELECT * FROM csa_stock`;
-const [result] = await db.execute(query);
-res.json({
-  message: "All Tools in CSA stock selected successfully",
-  result,
-});
-  }
-  catch(err){
-   res.status(500).json({
-    message: "Error occurred",
-    error: err.message,
-   });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
   }
 });
 
-app.get('/api/pbw-stock' , async(req,res) =>{
-  try{
-   const query = `SELECT * FROM pbw_stock`;
-   const [result] = await db.execute(query);
-   res.json({
-    message:"All Tools in PBW stock selected successfully",
-    result,
-   });
+app.get('/api/csa-stock', async (req, res) => {
+  try {
+    const query = `SELECT * FROM csa_stock`;
+    const [result] = await db.execute(query);
+    res.json({
+      message: "All Tools in CSA stock selected successfully",
+      result,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
   }
-  catch(err){
+});
+
+app.get('/api/pbw-stock', async (req, res) => {
+  try {
+    const query = `SELECT * FROM pbw_stock`;
+    const [result] = await db.execute(query);
+    res.json({
+      message: "All Tools in PBW stock selected successfully",
+      result,
+    });
+  } catch (err) {
     res.status(500).json({
       message: "Error occurred",
       error: err.message,
@@ -319,6 +310,7 @@ app.get('/api/stock-data', async (req, res) => {
     });
   }
 });
+
 app.get('/api/stock-comparison', async (req, res) => {
   try {
     const [sodResult] = await db.execute(`SELECT SUM(availableinstock) as total FROM sod_stock`);
@@ -354,6 +346,82 @@ app.get('/api/stock-comparison', async (req, res) => {
   }
 });
 
+// API to fetch request data
+app.get('/api/requests', async (req, res) => {
+  try {
+    const query = `SELECT * FROM requests`;
+    const [result] = await db.execute(query);
+    res.json({
+      message: "Request data retrieved successfully",
+      requests: result,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch usage data (example)
+app.get('/api/usage', async (req, res) => {
+  try {
+    const query = `SELECT * FROM usage`;
+    const [result] = await db.execute(query);
+    res.json({
+      message: "Usage data retrieved successfully",
+      usage: result,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+
+// API to fetch department data
+app.get('/api/departments', async (req, res) => {
+  try {
+    const query = `SELECT * FROM departments`;
+    const [result] = await db.execute(query);
+    res.json({
+      message: "Department data retrieved successfully",
+      departments: result,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
+// API to fetch department-specific data
+app.get('/api/department/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = `
+      SELECT 
+        d.department_name,
+        COUNT(i.item_id) AS totalItems,
+        SUM(i.usage_count) AS totalUsage
+      FROM departments d
+      LEFT JOIN items i ON d.department_id = i.department_id
+      WHERE d.department_id = ?
+      GROUP BY d.department_id
+    `;
+    const [result] = await db.execute(query, [id]);
+    res.json({
+      message: "Department data retrieved successfully",
+      departmentData: result[0],
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error occurred",
+      error: err.message,
+    });
+  }
+});
 
 app.delete('/api/delete-bdc-stock', async (req, res) => {
   const { toolname } = req.body;
